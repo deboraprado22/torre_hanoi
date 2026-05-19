@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Torre de Hanói - Drag and Drop</title>
+    <style>
+        :root {
+            --bg-color: #f4f7f6;
+            --gray-dark: #343a40;  /* Cinza escuro para cabeçalhos e base das torres */
+            --gray-light: #6c757d; /* Cinza médio para os pinos e bordas */
+        }
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background-color: var(--bg-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            margin: 0;
+            user-select: none;
+        }
+
+        /* Estilo para a foto acima do título */
+        .foto-container {
+             margin-top: 20px;
+             margin-bottom: 20px;
+             display: flex;
+             justify-content: center;
+             align-items: center;
+        }
+
+        .foto-perfil {
+             max-width: 400px;
+             height: auto;
+             border-radius: 8px;
+             object-fit: contain;
+             border: 3px solid var(--gray-light); /* Atualizado para cinza */
+             box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        }
+
+        h1 { color: white; margin: 0; font-size: 1.6em; }
+
+        .tabela-info {
+            background: white;
+            border-collapse: collapse;
+            margin: 0 auto 25px auto;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            border-radius: 8px;
+            overflow: hidden;
+            min-width: 450px;
+        }
+
+        .tabela-info th {
+            background-color: var(--gray-dark); /* Atualizado para cinza */
+            color: white;
+            padding: 14px;
+            font-size: 1.6em;
+            text-align: center;
+        }
+
+        .tabela-info td {
+            padding: 10px 18px;
+            border-bottom: 1px solid #eef2f1;
+            color: #444;
+            font-size: 1.2em;
+        }
+
+        .tabela-info td:first-child {
+            background-color: #fafbfc;
+            font-weight: 500;
+            width: 25%;
+        }
+
+        .setup-container, .stats {
+            background: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        input[type="number"] {
+            width: 50px;
+            padding: 5px;
+            font-size: 1em;
+            text-align: center;
+        }
+
+        button {
+            padding: 6px 12px;
+            background: #2ecc71;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button:hover { background: #27ae60; }
+        .btn-reset { background: #e74c3c; }
+        .btn-reset:hover { background: #c0392b; }
+
+        /* Área do Jogo */
+        .game-board {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            min-width: 650px;
+        }
+
+        .tower-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .tower-name {
+            font-weight: bold;
+            font-size: 1.2em;
+            margin-top: 10px;
+            color: #555;
+        }
+
+        .tower {
+            display: flex;
+            flex-direction: column-reverse;
+            align-items: center;
+            width: 160px;
+            height: 220px;
+            position: relative;
+            border-bottom: 12px solid var(--gray-dark); /* Atualizado para cinza */
+            border-radius: 4px;
+            padding-bottom: 1px;
+        }
+
+        /* Pino central */
+        .tower::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            width: 14px;
+            height: 200px;
+            background-color: var(--gray-light); /* Atualizado para cinza */
+            border-radius: 7px 7px 0 0;
+            z-index: 1;
+        }
+
+        /* Discos */
+        .disc {
+            height: 24px;
+            border-radius: 12px;
+            z-index: 2;
+            margin-bottom: 2px;
+            box-shadow: inset 0 -3px 0 rgba(0,0,0,0.2), 0 2px 4px rgba(0,0,0,0.1);
+            transition: transform 0.1s ease;
+        }
+
+        .disc[draggable="true"] {
+            cursor: grab;
+        }
+        .disc[draggable="true"]:active {
+            cursor: grabbing;
+        }
+
+        .tower.drag-over {
+            background-color: rgba(46, 204, 113, 0.1);
+            border-radius: 4px 4px 0 0;
+        }
+    </style>
+</head>
+<body>
+    <audio id="musicaFundo" src="musicajogo.mp3" loop></audio>
+
+    <div class="foto-container">
+        <img src="utfpr.png" alt="Foto da Aluna Débora" class="foto-perfil">
+    </div>
+
+    <table class="tabela-info">
+        <tr>
+            <th colspan="2"><h1>Torre de Hanói</h1></th>
+        </tr>
+        <tr>
+            <td><strong>Universidade:</strong></td>
+            <td>Universidade Tecnológica Federal do Paraná (UTFPR) - Campus Londrina</td>
+        </tr>
+        <tr>
+            <td><strong>Campus:</strong></td>
+            <td>Londrina</td>
+        </tr>
+        <tr>
+            <td><strong>Curso:</strong></td>
+            <td>Sistemas de Informação</td>
+        </tr>
+        <tr>
+            <td><strong>Disciplina:</strong></td>
+            <td>Matemática Discreta</td>
+        </tr>
+        <tr>
+            <td><strong>Professor:</strong></td>
+            <td>Alireza Mohebi Ashtiani</td>
+        </tr>
+        <tr>
+            <td><strong>Aluna:</strong></td>
+            <td>Débora de Oliveira Prado</td>
+        </tr>
+        <tr>
+            <td><strong>Período:</strong></td>
+            <td>2º Semestre / 2026</td>
+        </tr>
+    </table>
+
+    <div class="setup-container" id="setup">
+        <label for="numDiscs">Escolha a quantidade de discos </label>
+        <input type="number" id="numDiscs" min="1" max="8" value="3">
+        <button onclick="inicializarJogo()">Iniciar Jogo</button>
+    </div>
+
+    <div class="stats" id="statsPanel" style="display: none;">
+        <span>Jogadas: <strong id="countMoves">0</strong></span> |
+        <span>Mínimo Teórico: <strong id="minMoves">0</strong></span>
+        <button class="btn-reset" onclick="reiniciar()" style="margin-left: 20px;">Reiniciar</button>
+    </div>
+
+    <div class="game-board" id="board" style="display: none;">
+        <div class="tower-wrapper">
+            <div class="tower" id="A" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)" ondrop="drop(event)"></div>
+            <div class="tower-name">Torre A</div>
+        </div>
+        <div class="tower-wrapper">
+            <div class="tower" id="B" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)" ondrop="drop(event)"></div>
+            <div class="tower-name">Torre B</div>
+        </div>
+        <div class="tower-wrapper">
+            <div class="tower" id="C" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)" ondrop="drop(event)"></div>
+            <div class="tower-name">Torre C</div>
+        </div>
+    </div>
+
+    <div id="memePerfeitoContainer" style="display: none; text-align: center; margin-top: 20px;">
+        <p style="font-size: 1.2em; font-weight: bold; color: #2ecc71;">NÍVEL DEUS DO HANÓI!</p>
+        <img src="meme-perfeito.jpg.avif" alt="Meme Vitória Perfeita" style="max-width: 320px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.15);">
+    </div>
+
+    <div id="memeTentarContainer" style="display: none; text-align: center; margin-top: 20px;">
+        <p style="font-size: 1.2em; font-weight: bold; color: #e67e22;">Quase lá, jovem!</p>
+        <img src="meme-tentar.png" alt="Meme Tentativa" style="max-width: 320px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.15);">
+    </div>
+
+    <script>
+        const cores = ['#ff4d4d', '#ffbc42', '#4caf50', '#29b6f6', '#ab47bc', '#e91e63', '#3f51b5', '#009688'];
+
+        let torres = { "A": [], "B": [], "C": [] };
+        let totalDiscosJogo = 0;
+        let contagemJogadas = 0;
+        let minimoTeorico = 0;
+
+        function inicializarJogo() {
+            const nDiscos = parseInt(document.getElementById('numDiscs').value);
+            if (nDiscos < 1 || nDiscos > 8) {
+                alert("Por favor, escolha entre 1 e 8 discos!");
+                return;
+            }
+
+            // CONTROLE DE ÁUDIO: Ativa e toca a música de fundo com 30% de volume
+            const audio = document.getElementById('musicaFundo');
+            audio.volume = 0.3;
+            audio.play().catch(e => console.log("Aguardando clique inicial do usuário para liberar o áudio."));
+
+            // Limpa os memes da rodada anterior antes de construir o novo tabuleiro
+            document.getElementById('memePerfeitoContainer').style.display = 'none';
+            document.getElementById('memeTentarContainer').style.display = 'none';
+
+            torres = { "A": [], "B": [], "C": [] };
+            totalDiscosJogo = nDiscos;
+            contagemJogadas = 0;
+            minimoTeorico = Math.pow(2, nDiscos) - 1;
+
+            document.getElementById('countMoves').innerText = contagemJogadas;
+            document.getElementById('minMoves').innerText = minimoTeorico;
+
+            document.getElementById('A').innerHTML = '';
+            document.getElementById('B').innerHTML = '';
+            document.getElementById('C').innerHTML = '';
+
+            for (let i = nDiscos; i > 0; i--) {
+                torres["A"].push(i);
+
+                const discoVisual = document.createElement('div');
+                discoVisual.classList.add('disc');
+                discoVisual.id = `disc-${i}`;
+                discoVisual.setAttribute('data-size', i);
+
+                discoVisual.addEventListener('dragstart', dragStart);
+
+                discoVisual.style.width = `${40 + (i * 25)}px`;
+                discoVisual.style.backgroundColor = cores[(i - 1) % cores.length];
+
+                document.getElementById('A').appendChild(discoVisual);
+            }
+
+            atualizarDiscosArrastaveis();
+
+            document.getElementById('setup').style.display = 'none';
+            document.getElementById('statsPanel').style.display = 'block';
+            document.getElementById('board').style.display = 'flex';
+        }
+
+        function atualizarDiscosArrastaveis() {
+            for (let nome in torres) {
+                const elementoTorre = document.getElementById(nome);
+
+                Array.from(elementoTorre.children).forEach(disco => {
+                    disco.setAttribute('draggable', 'false');
+                });
+
+                if (elementoTorre.lastElementChild) {
+                    elementoTorre.lastElementChild.setAttribute('draggable', 'true');
+                }
+            }
+        }
+
+        function dragStart(event) {
+            event.dataTransfer.setData("text/plain", event.target.id);
+            event.dataTransfer.setData("torre-origem", event.target.parentElement.id);
+        }
+
+        function allowDrop(event) {
+            event.preventDefault();
+        }
+
+        function dragEnter(event) {
+            event.preventDefault();
+            const torre = event.target.closest('.tower');
+            if (torre) torre.classList.add('drag-over');
+        }
+
+        function dragLeave(event) {
+            const torre = event.target.closest('.tower');
+            if (torre) torre.classList.remove('drag-over');
+        }
+
+        function drop(event) {
+            event.preventDefault();
+
+            const torreDestinoElemento = event.target.closest('.tower');
+            if (!torreDestinoElemento) return;
+
+            torreDestinoElemento.classList.remove('drag-over');
+
+            const destino = torreDestinoElemento.id;
+            const idDisco = event.dataTransfer.getData("text/plain");
+            const origem = event.dataTransfer.getData("torre-origem");
+
+            if (!origem || !destino) return;
+            if (origem === destino) return;
+
+            const discoHTML = document.getElementById(idDisco);
+            const discoMoved = torres[origem][torres[origem].length - 1];
+            const discoDestino = torres[destino][torres[destino].length - 1];
+
+            if (discoDestino && discoMoved > discoDestino) {
+                alert(`❌ Movimento proibido! Você não pode colocar o disco ${discoMoved} sobre o disco ${discoDestino}.`);
+                return;
+            }
+
+            torres[origem].pop();
+            torres[destino].push(discoMoved);
+
+            torreDestinoElemento.appendChild(discoHTML);
+
+            contagemJogadas++;
+            document.getElementById('countMoves').innerText = contagemJogadas;
+
+            atualizarDiscosArrastaveis();
+
+            if (torres["C"].length === totalDiscosJogo || torres["B"].length === totalDiscosJogo) {
+
+                if (contagemJogadas === minimoTeorico) {
+                    document.getElementById('memePerfeitoContainer').style.display = 'block';
+                } else {
+                    document.getElementById('memeTentarContainer').style.display = 'block';
+                }
+
+                setTimeout(() => {
+                     if (contagemJogadas === minimoTeorico) {
+                        alert(`🏆 UAL! POR ESSA NEM VOCE ESPERAVA.🏆\n\nParabéns, craque! Você venceu com o número MÍNIMO de ${contagemJogadas} jogadas!`);
+                     } else {
+                         alert(`🎉 PARABÉNS! VOCÊ CONSEGUIU, MAS PODE FAZER MELHOR! \n\nVocê completou o jogo em ${contagemJogadas} jogadas.\n\nTENTE FINALIZAR COM ${minimoTeorico} JOGADAS.`);
+                     }
+                     reiniciar();
+                   }, 250);
+                }
+        }
+
+        function reiniciar() {
+            document.getElementById('setup').style.display = 'block';
+            document.getElementById('statsPanel').style.display = 'none';
+            document.getElementById('board').style.display = 'none';
+
+            // CONTROLE DE ÁUDIO: Pausa a música de fundo ao voltar para a tela inicial de setup
+            document.getElementById('musicaFundo').pause();
+        }
+    </script>
+</body>
+</html>
